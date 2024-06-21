@@ -297,6 +297,7 @@ class CoverageReport:
     entity_type: EntityType
     cov_type: CoverageType
     entity_name: Optional[str]
+    original_file_path: Optional[str]
     covered: Set[ColumnRef]
     total: Set[ColumnRef]
     misses: Set[ColumnRef] = field(init=False)
@@ -327,6 +328,11 @@ class CoverageReport:
         subentities = {
             col.name: CoverageReport.from_column(col, cov_type) for col in table.columns.values()
         }
+        original_file_path = set(
+            replace(col, table_name=table.name)
+            for col_report in subentities.values()
+            for col in col_report.original_file_path
+        )
         covered = set(
             replace(col, table_name=table.name)
             for col_report in subentities.values()
@@ -339,7 +345,7 @@ class CoverageReport:
         )
 
         return CoverageReport(
-            cls.EntityType.TABLE, cov_type, table.name, covered, total, subentities
+            cls.EntityType.TABLE, cov_type, table.name, covered, total, original_file_path, subentities
         )
 
     @classmethod
@@ -432,13 +438,13 @@ class CoverageReport:
 
                 lines = ET.SubElement(class_element, "lines")
 
-                for i, column in sorted(table_cov.subentities.items()):
+                for i, column_cov in sorted(table_cov.subentities.items()):
                     ET.SubElement(
                         lines,
                         "line",
                         attrib={
                             "number": str(i),
-                            "hits": column.covered
+                            "hits": column_cov.covered
                         }
                     )
 
@@ -540,6 +546,11 @@ class CoverageReport:
                     replace(col, table_name=table_name)
                     for col_report in subentities.values()
                     for col in col_report.total
+                ),
+                set(
+                    replace(col, table_name=table_name)
+                    for col_report in subentities.values()
+                    for col in col_report.original_file_path
                 ),
                 subentities,
             )
