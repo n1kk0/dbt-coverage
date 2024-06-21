@@ -321,7 +321,7 @@ class CoverageReport:
         covered = set(col for table_report in subentities.values() for col in table_report.covered)
         total = set(col for table_report in subentities.values() for col in table_report.total)
 
-        return CoverageReport(cls.EntityType.CATALOG, cov_type, None, covered, total, subentities)
+        return CoverageReport(cls.EntityType.CATALOG, cov_type, None, covered, total, "", subentities)
 
     @classmethod
     def from_table(cls, table: Table, cov_type: CoverageType):
@@ -360,7 +360,7 @@ class CoverageReport:
         covered = {CoverageReport.ColumnRef(None, column.name)} if covered else set()
         total = {CoverageReport.ColumnRef(None, column.name)}
 
-        return CoverageReport(cls.EntityType.COLUMN, cov_type, column.name, covered, total, {})
+        return CoverageReport(cls.EntityType.COLUMN, cov_type, column.name, covered, total, "", {})
 
     def to_markdown_table(self):
         if self.entity_type == CoverageReport.EntityType.TABLE:
