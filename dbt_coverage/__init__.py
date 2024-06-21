@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
@@ -33,6 +34,7 @@ class CoverageType(Enum):
 class CoverageFormat(str, Enum):
     STRING_TABLE = "string"
     MARKDOWN_TABLE = "markdown"
+    COBERTURA_XML = "cobertura"
 
 
 @dataclass
@@ -377,6 +379,75 @@ class CoverageReport:
         else:
             raise TypeError(
                 f"Unsupported report_type for to_markdown_table method: "
+                f"{type(self.entity_type)}"
+            )
+
+    def to_cobertura_xml(self):
+        if self.entity_type == CoverageReport.EntityType.CATALOG:
+            coverage = ET.Element(
+                "coverage",
+                attrib={
+                    "line-rate": self.coverage,
+                    "branch-rate": "0.0",
+                    "lines-covered": self.covered,
+                    "lines-valid": self.total,
+                    "branches-covered": "0",
+                    "branches-valid": "0",
+                    "complexity": "0",
+                    "version": "0.1",
+                    "timestamp": "0"
+                }
+            )
+
+            sources = ET.SubElement(coverage, "sources")
+            ET.SubElement(sources, "source").text = "."
+
+            packages = ET.SubElement(coverage, "packages")
+
+            package = ET.SubElement(
+                packages,
+                "package",
+                attrib={
+                    "name": "dbt",
+                    "line-rate": self.coverage,
+                    "branch-rate": "0.0",
+                    "complexity": "0"
+                }
+            )
+
+            classes = ET.SubElement(package, "classes")
+
+            for _, table_cov in sorted(self.subentities.items()):
+                class_element = ET.SubElement(
+                    classes,
+                    "class",
+                    attrib={
+                        "name": table_cov.entity_name,
+                        "filename": table_cov.original_file_path,
+                        "line-rate": table_cov.coverage,
+                        "branch-rate": "0.0",
+                        "complexity": "0"
+                    }
+                )
+
+                lines = ET.SubElement(class_element, "lines")
+
+                for i, column in sorted(table_cov.subentities.items()):
+                    ET.SubElement(
+                        lines,
+                        "line",
+                        attrib={
+                            "number": str(i),
+                            "hits": column.covered
+                        }
+                    )
+
+                ET.SubElement(class_element, "methods")
+
+            return ET.ElementTree(coverage)
+        else:
+            raise TypeError(
+                f"Unsupported entity_type for to_cobertura_xml method: "
                 f"{type(self.entity_type)}"
             )
 
@@ -778,10 +849,15 @@ def read_coverage_report(path: Path):
     return report
 
 
-def write_coverage_report(coverage_report: CoverageReport, path: Path):
+def write_coverage_report(coverage_report: CoverageReport, path: Path, cov_format: CoverageFormat):
     logging.info("Writing coverage report to %s", path)
-    with open(path, "w") as f:
-        f.write(coverage_report.to_json())
+    if cov_format == CoverageFormat.COBERTURA_XML:
+        coverage_report.to_cobertura_xml().write(
+            path, encoding="utf-8", xml_declaration=True
+        )
+    else:
+        with open(path, "w") as f:
+            f.write(coverage_report.to_json())
     logging.info("Report successfully written to %s", path)
 
 
@@ -836,7 +912,7 @@ def do_compute(
     else:
         print(coverage_report.to_formatted_string())
 
-    write_coverage_report(coverage_report, cov_report)
+    write_coverage_report(coverage_report, cov_report, cov_format)
 
     if cov_fail_under is not None:
         fail_under(coverage_report, cov_fail_under)
@@ -883,7 +959,7 @@ def compute(
     ),
     cov_format: CoverageFormat = typer.Option(
         CoverageFormat.STRING_TABLE,
-        help="The output format to print, either `string` or `markdown`",
+        help="The output format to print, either `string`, `markdown` or `corbertura`",
     ),
 ):
     """Compute coverage for project in PROJECT_DIR from catalog.json and manifest.json."""
