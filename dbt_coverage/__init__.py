@@ -328,11 +328,7 @@ class CoverageReport:
         subentities = {
             col.name: CoverageReport.from_column(col, cov_type) for col in table.columns.values()
         }
-        original_file_path = set(
-            replace(col, table_name=table.name)
-            for col_report in subentities.values()
-            for col in col_report.original_file_path
-        )
+        original_file_path = table.original_file_path
         covered = set(
             replace(col, table_name=table.name)
             for col_report in subentities.values()
