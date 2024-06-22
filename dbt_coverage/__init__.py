@@ -297,11 +297,11 @@ class CoverageReport:
     entity_type: EntityType
     cov_type: CoverageType
     entity_name: Optional[str]
-    original_file_path: Optional[str]
     covered: Set[ColumnRef]
     total: Set[ColumnRef]
     misses: Set[ColumnRef] = field(init=False)
     coverage: float = field(init=False)
+    original_file_path: Optional[str]
     subentities: Dict[str, CoverageReport]
 
     def __post_init__(self):
