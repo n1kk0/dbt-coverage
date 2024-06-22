@@ -393,10 +393,10 @@ class CoverageReport:
             coverage = ET.Element(
                 "coverage",
                 attrib={
-                    "line-rate": self.coverage,
+                    "line-rate": str(self.coverage),
                     "branch-rate": "0.0",
-                    "lines-covered": self.covered,
-                    "lines-valid": self.total,
+                    "lines-covered": str(self.covered),
+                    "lines-valid": str(self.total),
                     "branches-covered": "0",
                     "branches-valid": "0",
                     "complexity": "0",
@@ -415,7 +415,7 @@ class CoverageReport:
                 "package",
                 attrib={
                     "name": "dbt",
-                    "line-rate": self.coverage,
+                    "line-rate": str(self.coverage),
                     "branch-rate": "0.0",
                     "complexity": "0"
                 }
@@ -430,7 +430,7 @@ class CoverageReport:
                     attrib={
                         "name": table_cov.entity_name,
                         "filename": table_cov.original_file_path,
-                        "line-rate": table_cov.coverage,
+                        "line-rate": str(table_cov.coverage),
                         "branch-rate": "0.0",
                         "complexity": "0"
                     }
@@ -444,7 +444,7 @@ class CoverageReport:
                         "line",
                         attrib={
                             "number": str(i),
-                            "hits": column_cov.covered
+                            "hits": str(column_cov.covered)
                         }
                     )
 
