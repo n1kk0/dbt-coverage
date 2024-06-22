@@ -395,8 +395,8 @@ class CoverageReport:
                 attrib={
                     "line-rate": str(self.coverage),
                     "branch-rate": "0.0",
-                    "lines-covered": str(self.covered),
-                    "lines-valid": str(self.total),
+                    "lines-covered": str(len(self.covered)),
+                    "lines-valid": str(len(self.total)),
                     "branches-covered": "0",
                     "branches-valid": "0",
                     "complexity": "0",
@@ -438,13 +438,15 @@ class CoverageReport:
 
                 lines = ET.SubElement(class_element, "lines")
 
+                j = 0
                 for i, column_cov in sorted(table_cov.subentities.items()):
+                    j += 1
                     ET.SubElement(
                         lines,
                         "line",
                         attrib={
-                            "number": str(i),
-                            "hits": str(column_cov.covered)
+                            "number": str(j),
+                            "hits": str(len(column_cov.covered))
                         }
                     )
 
