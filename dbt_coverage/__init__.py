@@ -545,11 +545,7 @@ class CoverageReport:
                     for col_report in subentities.values()
                     for col in col_report.total
                 ),
-                set(
-                    replace(col, table_name=table_name)
-                    for col_report in subentities.values()
-                    for col in col_report.original_file_path
-                ),
+                col_report.original_file_path,
                 subentities,
             )
         else:
